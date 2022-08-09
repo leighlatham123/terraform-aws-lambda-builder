@@ -49,21 +49,24 @@ module "source_zip_file" {
 # Upload the zip file to S3                #
 # (if build mode is CODEBUILD, LAMBDA, S3) #
 ############################################
-
-resource "aws_s3_bucket_object" "source_zip_file" {
-  count = var.enabled && contains(["CODEBUILD", "LAMBDA", "S3"], var.build_mode) ? 1 : 0
-
+  
+resource "aws_s3_object" "source_zip_file" {
   bucket = var.s3_bucket
   key    = contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? "${var.function_name}/${module.source_zip_file.output_sha}/source.zip" : var.s3_key
   source = module.source_zip_file.output_path
 
+  # The filemd5() function is available in Terraform 0.11.12 and later
+  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
+  # etag = "${md5(file("path/to/file"))}"
+  etag = filemd5("path/to/file")
+  
   lifecycle {
     create_before_destroy = true
   }
 }
 
 locals {
-  source_zip_file_s3_key = var.enabled && contains(["CODEBUILD", "LAMBDA", "S3"], var.build_mode) ? aws_s3_bucket_object.source_zip_file[0].key : null
+  source_zip_file_s3_key = var.enabled && contains(["CODEBUILD", "LAMBDA", "S3"], var.build_mode) ? aws_s3_object.source_zip_file[0].key : null
 }
 
 ###############################################
