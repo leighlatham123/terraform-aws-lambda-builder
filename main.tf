@@ -54,11 +54,6 @@ resource "aws_s3_object" "source_zip_file" {
   bucket = var.s3_bucket
   key    = contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? "${var.function_name}/${module.source_zip_file.output_sha}/source.zip" : var.s3_key
   source = module.source_zip_file.output_path
-
-  # The filemd5() function is available in Terraform 0.11.12 and later
-  # For Terraform 0.11.11 and earlier, use the md5() function and the file() function:
-  # etag = "${md5(file("path/to/file"))}"
-  etag = filemd5("path/to/file")
   
   lifecycle {
     create_before_destroy = true
