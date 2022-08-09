@@ -51,6 +51,8 @@ module "source_zip_file" {
 ############################################
   
 resource "aws_s3_object" "source_zip_file" {
+  count = var.enabled && contains(["CODEBUILD", "LAMBDA", "S3"], var.build_mode) ? 1 : 0
+  
   bucket = var.s3_bucket
   key    = contains(["CODEBUILD", "LAMBDA"], var.build_mode) ? "${var.function_name}/${module.source_zip_file.output_sha}/source.zip" : var.s3_key
   source = module.source_zip_file.output_path
